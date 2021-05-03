@@ -1,0 +1,22 @@
+# package directories
+node_modules
+jspm_packages
+
+# Serverless directories
+.serverless
+
+# build
+.webpack
+
+
+# macOS
+.DS_Store
+
+# Logs
+logs
+*.log
+npm-debug.log*
+.sentryclirc
+
+# jest
+coverage

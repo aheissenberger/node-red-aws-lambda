@@ -1,0 +1,129 @@
+service: ${self:custom.client}-${self:custom.project} # NOTE: update this with your service name
+frameworkVersion: ^2.39.0
+
+plugins:
+  # - serverless-plugin-git-variables
+  # - serverless-pseudo-parameters
+  # - serverless-plugin-log-retention
+  - serverless-esbuild
+  # - serverless-webpack
+  - serverless-offline
+  - serverless-s3-deploy
+
+provider:
+  name: aws
+  runtime: nodejs14.x
+  stage: ${opt:stage, self:custom.stageDefault}
+  region: eu-west-1
+  versionFunctions: false
+  timeout: 240 # sec =4 min - optional, in seconds, default is 6sec
+  stackTags:
+    client: ${self:custom.client}
+    project: ${self:custom.project}
+  environment:
+    TEST_ENV: TESTENV
+    SERVICE: ${self:service}
+    STAGE: ${self:provider.stage}
+    # SENTRY_DSN: ${self:custom.sentry.dsn}
+    # SENTRY_RELEASE: ${git:sha1}
+  iam:
+    role:
+      statements:
+        - Effect: "Allow"
+          Action:
+            - s3:PutObject
+            - s3:PutObjectAcl
+            - s3:GetObject
+          Resource:
+            Fn::Join:
+              - ''
+              - - 'arn:aws:s3:::'
+                - Ref: bucketNodeRed
+                - '/*'
+        - Effect: "Allow"
+          Action:
+            - s3:ListBucket
+          Resource:
+            Fn::Join:
+              - ''
+              - - 'arn:aws:s3:::'
+                - Ref: bucketNodeRed
+
+
+
+# apiGateway:
+#     shouldStartNameWithService: true
+
+custom:
+  stageDefault: local
+  client: ah
+  project: nodered
+  logRetentionInDays: 14 # Days value must be one of 1,3,5,7,14,30,60,90,120,150,180,365,400,545,731,1827,3653
+  serverless-offline:
+    port: 4000
+  webpack:
+    webpackConfig: "webpack.config.js" # Name of webpack configuration file
+    includeModules: true # Node modules configuration for packaging
+    packager: "yarn" # Packager that will be used to package your external modules
+    excludeFiles: src/**/*.test.js # Provide a glob for files to ignore
+  esbuild:
+    target: node14
+    packager: yarn
+    bundle: true
+    minify: false
+    sourcemap: true
+    external:
+      - node-red
+      - node-red-contrib-lambda-io
+      - node-red-contrib-storage-s3
+      - when
+
+  #   watch:
+  #     # anymatch-compatible definition (https://github.com/es128/anymatch)
+  #     pattern: ['./index.ts', 'src/**/*.ts'] # default .
+  #     ignore: ['.serverless/**/*', '.build'] # default ['.build', 'dist', 'node_modules']
+  bucketNodeRed: ${self:service}-${self:provider.stage}-node-red
+  assets:
+    auto: true
+    targets:
+      - bucket: ${self:custom.bucketNodeRed}
+        prefix: ${self:service}-${self:provider.stage}-node_red # node_red is the function name!
+        files:
+        - source: ./REDuserDir/
+          globs: 
+            #- 'flow.json'
+            #- 'credential.json'
+            - '**/*.*'
+
+functions:
+  node_red:
+    handler: src/index.handler
+    environment:
+      S3_BUCKET: ${self:custom.bucketNodeRed}
+    events:
+      - http:
+          path: run/{hallo}
+          method: get
+          cors: true
+
+  # test:
+  #   handler: src/test.handler
+  #   events:
+  #     - http:
+  #         path: test/{tenant}
+  #         method: get
+  #         cors: true
+
+package:
+  patterns:
+    - REDuserDir
+    - REDnodesDir
+
+resources:
+  # AWS CloudFormation Template
+  Resources:
+    bucketNodeRed:
+      Type: AWS::S3::Bucket
+      Properties:
+        BucketName: ${self:custom.bucketNodeRed}
+
