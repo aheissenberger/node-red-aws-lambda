@@ -106,13 +106,13 @@ functions:
           method: get
           cors: true
 
-  # test:
-  #   handler: src/test.handler
-  #   events:
-  #     - http:
-  #         path: test/{tenant}
-  #         method: get
-  #         cors: true
+  test:
+    handler: src/test.handler
+    events:
+      - http:
+          path: test/{tenant}
+          method: get
+          cors: true
 
 package:
   patterns:

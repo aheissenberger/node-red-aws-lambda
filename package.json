@@ -14,13 +14,12 @@
     "invoke:local": "sls invoke local --path aws-events/http.json -f node_red",
     "invoke:offline": "aws lambda invoke /dev/null --endpoint-url http://localhost:3002 --payload file://aws-events/http.json --function-name ah-nodered-local-node_red",
     "node-red:start": "node-red -u REDuserDir/ -s REDuserDir/settings.js",
-    "deploy:config": "sls s3deploy -v ",
-    "fix-esbuild": "pushd ./node_modules/serverless-esbuild && rm -rf ./dist && yarn install && ./node_modules/.bin/tsc; popd"
+    "deploy:config": "sls s3deploy -v "
   },
   "devDependencies": {
     "@types/node": "^15.0.1",
-    "serverless": "^2.39.0",
-    "serverless-esbuild": "git+ssh://git@github.com:aheissenberger/serverless-esbuild.git#fix/invoke-local-servicedirpath",
+    "serverless": "^2.39.2",
+    "serverless-esbuild": "^1.10.5",
     "serverless-offline": "^7.0.0",
     "serverless-plugin-git-variables": "^5.1.0",
     "serverless-plugin-log-retention": "^2.0.0",
